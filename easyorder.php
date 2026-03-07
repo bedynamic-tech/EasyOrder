@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: EasyOrder
- * Description: Easily display products and receive email orders.
- * Version:     0.2.9
+ * Description: Easily display products, manage inventory and receive email orders.
+ * Version:     0.3.0
  * Author:      Dynamic Technologies
  * Author URI:  https://bedynamic.tech
  */
@@ -43,8 +43,8 @@ function eo_render_settings_page() {
             <p style="margin:0;">The product table automatically hides columns that have no data:</p>
             <ul style="margin:8px 0 0 20px;list-style:disc;">
                 <li><strong>SKU</strong> --- hidden if no products have a SKU entered</li>
-                <li><strong>Type</strong> --- hidden if no Types have been created under Products -�� Types</li>
-                <li><strong>Category</strong> --- hidden if no Categories have been created under Products -�� Categories</li>
+                <li><strong>Type</strong> --- hidden if no Types have been created under Products &rsaquo; Types</li>
+                <li><strong>Category</strong> --- hidden if no Categories have been created under Products &rsaquo; Categories</li>
             </ul>
         </div>
         <form method="post" action="options.php">
