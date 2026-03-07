@@ -2,7 +2,7 @@
 /**
  * Plugin Name: EasyOrder
  * Description: Easily display products, manage inventory and receive email orders.
- * Version:     0.3.3
+ * Version:     0.3.4
  * Author:      Dynamic Technologies
  * Author URI:  https://bedynamic.tech
  */
@@ -325,7 +325,7 @@ function eo_render_shortcode() {
         </div>
 
         <div class="eo-controls">
-            <input type="text" id="eo-search" placeholder="Search products--�" style="min-width:220px;" />
+            <input type="text" id="eo-search" placeholder="Search products..." style="min-width:220px;" />
             <?php if ( ! empty( $strains ) && ! is_wp_error( $strains ) ) : ?>
             <select id="eo-type-filter">
                 <option value="">All Types</option>
@@ -416,12 +416,12 @@ function eo_render_shortcode() {
 
             <div class="eo-fields">
                 <label for="eo-sender-notes">Notes (optional)</label>
-                <textarea id="eo-sender-notes" name="sender_notes" rows="3" placeholder="Delivery instructions, special requests--�"></textarea>
+                <textarea id="eo-sender-notes" name="sender_notes" rows="3" placeholder="Delivery instructions, special requests..."></textarea>
             </div>
 
             <div class="eo-actions">
                 <button type="submit" id="eo-submit" class="wp-element-button button">Send Order Request</button>
-                <span id="eo-spinner" style="display:none;">Sending--�</span>
+                <span id="eo-spinner" style="display:none;">Sending...</span>
             </div>
         </form>
     </div>
@@ -459,9 +459,9 @@ function eo_render_shortcode() {
         .eo-sort-icon { font-size: 20px; opacity: 0.5; margin-left: 6px; }
         .eo-sortable.asc  .eo-sort-icon,
         .eo-sortable.desc .eo-sort-icon { opacity: 1; }
-        .eo-sortable.asc  .eo-sort-icon::before { content: '-��'; }
-        .eo-sortable.desc .eo-sort-icon::before { content: '-��'; }
-        .eo-sortable:not(.asc):not(.desc) .eo-sort-icon::before { content: '-��'; }
+        .eo-sortable.asc  .eo-sort-icon::before { content: '&#8593;'; }
+        .eo-sortable.desc .eo-sort-icon::before { content: '&#8595;'; }
+        .eo-sortable:not(.asc):not(.desc) .eo-sort-icon::before { content: '&#8597;'; }
 
         /* Notes + actions */
         .eo-fields { margin-bottom: 20px; }
@@ -499,7 +499,7 @@ function eo_render_shortcode() {
         const stockOnly    = document.getElementById('eo-instock-only');
         const resetBtn     = document.getElementById('eo-reset-filters');
 
-        // ------ Qty clamping ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        // --- Qty clamping ---
         form.querySelectorAll('.eo-qty').forEach(function (input) {
             input.addEventListener('input', function () {
                 const max = parseInt(input.getAttribute('max'), 10);
@@ -509,7 +509,7 @@ function eo_render_shortcode() {
             });
         });
 
-        // ------ Filter ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        // --- Filter ---
         function applyFilters() {
             const term   = search       ? search.value.toLowerCase().trim() : '';
             const strain = strainFilter ? strainFilter.value : '';
@@ -544,7 +544,7 @@ function eo_render_shortcode() {
             applyFilters();
         });
 
-        // ------ Sorting ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        // --- Sorting ---
         document.querySelectorAll('.eo-sortable').forEach(function (th) {
             th.addEventListener('click', function () {
                 const col   = parseInt(th.dataset.col, 10);
@@ -568,7 +568,7 @@ function eo_render_shortcode() {
             });
         });
 
-        // ------ Submit ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        // --- Submit ---
         let confirmed = false;
 
         form.addEventListener('submit', function (e) {
@@ -790,7 +790,7 @@ function eo_handle_submission() {
         error_log( 'EasyOrder: admin email failed to send to ' . implode( ', ', $recipient ) );
     }
 
-    // --- Confirmation email to submitter (no pricing) ---
+    // --- Confirmation email ---
 
     $confirm_rows  = '';
     $confirm_total = 0;
