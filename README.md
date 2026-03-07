@@ -44,7 +44,7 @@ Built with the help of Claude.
 Place the shortcode on any page or post:
 
 ```
-[product_order_form]
+[easyorder_form]
 ```
 
 Users must be logged in to view and submit the form. If a visitor is not logged in, a message is shown in place of the form.
@@ -77,16 +77,6 @@ Navigate to **Settings → EasyOrder** to configure:
 
 ---
 
-## Column Visibility
-
-The product table automatically hides columns with no data:
-
-- **SKU** — hidden if no products have a SKU entered
-- **Type** — hidden if no Types exist under Products → Types
-- **Category** — hidden if no Categories exist under Products → Categories
-
----
-
 ## Emails
 
 ### Order Notification
@@ -94,14 +84,6 @@ Includes product name, SKU, type, price, quantity, line totals, estimated order 
 
 ### Confirmation Email
 Sent to the logged-in user who submitted the order. Includes product name, SKU, type, and quantity — no pricing is included.
-
----
-
-## Shortcode Reference
-
-| Attribute | Default | Description |
-|---|---|---|
-| *(none)* | — | Recipients and settings are managed via the admin settings page |
 
 ---
 
