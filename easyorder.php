@@ -2,7 +2,7 @@
 /**
  * Plugin Name: EasyOrder
  * Description: Easily display products and receive email orders.
- * Version:     0.2.5
+ * Version:     0.2.6
  * Author:      Dynamic Technologies
  * Author URI:  https://bedynamic.tech
  */
@@ -255,7 +255,7 @@ function pof_save_meta( $post_id ) {
 add_shortcode( 'product_order_form', 'pof_render_shortcode' );
 function pof_render_shortcode( $atts ) {
     if ( ! is_user_logged_in() ) {
-        return '<p>You must be logged in to submit an order request.</p>';
+        return wp_login_form( [ 'echo' => false, 'redirect' => get_permalink() ] );
     }
 
     $products = get_posts( [
