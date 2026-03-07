@@ -2,7 +2,7 @@
 /**
  * Plugin Name: EasyOrder
  * Description: Easily display products, manage inventory and receive email orders.
- * Version:     0.3.4
+ * Version:     0.3.5
  * Author:      Dynamic Technologies
  * Author URI:  https://bedynamic.tech
  */
@@ -687,7 +687,7 @@ function eo_handle_submission() {
     }
 
     $site_name = get_bloginfo( 'name' );
-    $subject   = "Order Request --- {$sender_name}";
+    $subject   = "New Order Request - {$sender_name}";
 
     $rows  = '';
     $total = 0;
@@ -732,50 +732,57 @@ function eo_handle_submission() {
 
     $body = "<!DOCTYPE html>
 <html>
-<head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'></head>
-<body style='margin:0;padding:20px;background:#f0f0f0;font-family:Arial,sans-serif;'>
-<table width='100%' cellpadding='0' cellspacing='0'>
-<tr><td align='center'>
-<table style='width:94%;max-width:960px;background:#ffffff;border-radius:6px;overflow:hidden;' cellpadding='0' cellspacing='0'>
-    <tr>
-        <td style='padding:20px 24px;border-bottom:1px solid #eee;'>
-            <p style='margin:0;font-size:13px;color:#999;'>{$site_name}</p>
-            <h1 style='margin:4px 0 0;font-size:18px;color:#222;'>Order Request</h1>
-        </td>
-    </tr>
-    <tr>
-        <td style='padding:14px 24px;border-bottom:1px solid #eee;font-size:14px;color:#444;'>
-            From <strong>{$sender_name}</strong> &nbsp;&middot;&nbsp;
-            <a href='mailto:{$sender_email}' style='color:#0073aa;text-decoration:none;'>{$sender_email}</a>
-        </td>
-    </tr>
-    <tr>
-        <td style='padding:16px 24px 20px;'>
-            <table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse;'>
-                <thead>
-                    <tr style='background:#f5f5f5;'>
-                        <th style='padding:8px 12px;text-align:left;font-size:12px;color:#777;border-bottom:1px solid #ddd;text-transform:uppercase;letter-spacing:.5px;'>Product</th>
-                        <th style='padding:8px 12px;text-align:left;font-size:12px;color:#777;border-bottom:1px solid #ddd;text-transform:uppercase;letter-spacing:.5px;'>SKU</th>
-                        <th style='padding:8px 12px;text-align:left;font-size:12px;color:#777;border-bottom:1px solid #ddd;text-transform:uppercase;letter-spacing:.5px;'>Type</th>
-                        <th style='padding:8px 12px;text-align:left;font-size:12px;color:#777;border-bottom:1px solid #ddd;text-transform:uppercase;letter-spacing:.5px;'>Price</th>
-                        <th style='padding:8px 12px;text-align:center;font-size:12px;color:#777;border-bottom:1px solid #ddd;text-transform:uppercase;letter-spacing:.5px;'>Qty</th>
-                        <th style='padding:8px 12px;text-align:right;font-size:12px;color:#777;border-bottom:1px solid #ddd;text-transform:uppercase;letter-spacing:.5px;'>Total</th>
-                    </tr>
-                </thead>
-                <tbody>{$rows}</tbody>
-            </table>
-            {$total_block}
-            {$notes_block}
-        </td>
-    </tr>
-    <tr>
-        <td style='padding:12px 24px;background:#f9f9f9;border-top:1px solid #eee;'>
-            <p style='margin:0;font-size:11px;color:#bbb;'>Sent via {$site_name}</p>
-        </td>
-    </tr>
-</table>
-</td></tr>
-</table>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<style>
+  body { margin:0; padding:0; background:#f0f0f0; font-family:Arial,sans-serif; }
+  .email-outer { width:100%; background:#f0f0f0; padding:20px 0; }
+  .email-wrap  { width:94%; max-width:960px; margin:0 auto; background:#ffffff; border-radius:6px; overflow:hidden; }
+  .email-header { padding:20px 24px; border-bottom:1px solid #eee; }
+  .email-from   { padding:14px 24px; border-bottom:1px solid #eee; font-size:14px; color:#444; }
+  .email-body   { padding:16px 24px 20px; }
+  .email-footer { padding:12px 24px; background:#f9f9f9; border-top:1px solid #eee; }
+  .item-table   { width:100%; border-collapse:collapse; }
+  .item-table th { padding:8px 12px; text-align:left; font-size:12px; color:#777; border-bottom:1px solid #ddd; text-transform:uppercase; letter-spacing:.5px; background:#f5f5f5; }
+  .item-table th.right { text-align:right; }
+  .item-table th.center { text-align:center; }
+  .item-table td { padding:10px 12px; border-bottom:1px solid #eee; font-size:14px; }
+</style>
+</head>
+<body>
+<div class='email-outer'>
+<div class='email-wrap'>
+  <div class='email-header'>
+    <p style='margin:0;font-size:13px;color:#999;'>{$site_name}</p>
+    <h1 style='margin:4px 0 0;font-size:18px;color:#222;'>Order Request</h1>
+  </div>
+  <div class='email-from'>
+    From <strong>{$sender_name}</strong> &nbsp;&middot;&nbsp;
+    <a href='mailto:{$sender_email}' style='color:#0073aa;text-decoration:none;'>{$sender_email}</a>
+  </div>
+  <div class='email-body'>
+    <table class='item-table'>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>SKU</th>
+          <th>Type</th>
+          <th>Price</th>
+          <th class='center'>Qty</th>
+          <th class='right'>Total</th>
+        </tr>
+      </thead>
+      <tbody>{$rows}</tbody>
+    </table>
+    {$total_block}
+    {$notes_block}
+  </div>
+  <div class='email-footer'>
+    <p style='margin:0;font-size:11px;color:#bbb;'>Sent via {$site_name}</p>
+  </div>
+</div>
+</div>
 </body>
 </html>";
 
@@ -901,7 +908,7 @@ function eo_handle_submission() {
     $confirm_headers = [ 'Content-Type: text/html; charset=UTF-8' ];
 
     if ( $send_confirmation ) {
-        wp_mail( $sender_email, "Your Order Request --- {$site_name}", $confirm_body, $confirm_headers );
+        wp_mail( $sender_email, "Your Order has been Received", $confirm_body, $confirm_headers );
     }
 
     wp_send_json_success();
