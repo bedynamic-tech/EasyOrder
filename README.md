@@ -2,7 +2,7 @@
 
 A lightweight WordPress plugin for displaying a product catalog and receiving email order requests.
 
-Built by [Dynamic Technologies](https://bedynamic.tech) with the help of Claude.
+Built with the help of Claude.
 
 ---
 <img width="750" alt="image" src="https://github.com/user-attachments/assets/c3b8497e-b1cd-4c89-8444-7d5816b85d01" />
