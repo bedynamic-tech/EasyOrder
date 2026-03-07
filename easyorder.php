@@ -2,7 +2,7 @@
 /**
  * Plugin Name: EasyOrder
  * Description: Easily display products, manage inventory and receive email orders.
- * Version:     0.3.0
+ * Version:     0.3.1
  * Author:      Dynamic Technologies
  * Author URI:  https://bedynamic.tech
  */
@@ -15,6 +15,15 @@ define( 'EO_CPT',    'eo_product' );
 define( 'EO_TAX',    'eo_category' );
 define( 'EO_STRAIN', 'eo_type' );
 define( 'EO_NONCE',  'eo_submit_nonce' );
+
+// --- Plugin Action Links ---
+
+add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'eo_action_links' );
+function eo_action_links( $links ) {
+    $settings_link = '<a href="' . admin_url( 'options-general.php?page=easyorder-settings' ) . '">Settings</a>';
+    array_unshift( $links, $settings_link );
+    return $links;
+}
 
 // --- Settings Page ---
 
