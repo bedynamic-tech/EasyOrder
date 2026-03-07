@@ -36,6 +36,7 @@ add_action( 'admin_init', 'eo_register_settings' );
 function eo_register_settings() {
     register_setting( 'easyorder_settings', 'easyorder_recipients', [ 'sanitize_callback' => 'eo_sanitize_recipients' ] );
     register_setting( 'easyorder_settings', 'easyorder_send_confirmation', [ 'sanitize_callback' => 'absint' ] );
+    register_setting( 'easyorder_settings', 'easyorder_confirmation_pricing', [ 'sanitize_callback' => 'absint' ] );
 }
 
 function eo_sanitize_recipients( $value ) {
@@ -84,6 +85,20 @@ function eo_render_settings_page() {
                                 <?php checked( get_option( 'easyorder_send_confirmation', 1 ), 1 ); ?>
                             />
                             Send a confirmation email to the user after they submit an order request
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row">Show Pricing in Confirmation</th>
+                    <td>
+                        <label>
+                            <input
+                                type="checkbox"
+                                name="easyorder_confirmation_pricing"
+                                value="1"
+                                <?php checked( get_option( 'easyorder_confirmation_pricing', 0 ), 1 ); ?>
+                            />
+                            Include product pricing and order total in the confirmation email
                         </label>
                     </td>
                 </tr>
@@ -654,7 +669,8 @@ function eo_handle_submission() {
     if ( empty( $recipient ) ) {
         $recipient = [ get_option( 'admin_email' ) ];
     }
-    $send_confirmation  = (bool) get_option( 'easyorder_send_confirmation', 1 );
+    $send_confirmation       = (bool) get_option( 'easyorder_send_confirmation', 1 );
+    $confirmation_pricing    = (bool) get_option( 'easyorder_confirmation_pricing', 0 );
 
     if ( empty( $items ) ) {
         wp_send_json_error( 'No items selected.' );
@@ -776,8 +792,9 @@ function eo_handle_submission() {
 
     // --- Confirmation email to submitter (no pricing) ---
 
-    $confirm_rows = '';
-    $j = 0;
+    $confirm_rows  = '';
+    $confirm_total = 0;
+    $j             = 0;
 
     foreach ( $items as $item ) {
         $post_id = (int) ( $item['id'] ?? 0 );
@@ -792,15 +809,34 @@ function eo_handle_submission() {
         $strain     = esc_html( ( $type_terms && ! is_wp_error( $type_terms ) ) ? $type_terms[0]->name : '---' );
         $bg         = $j++ % 2 === 0 ? '#ffffff' : '#f9f9f9';
 
+        $price_cells = '';
+        if ( $confirmation_pricing ) {
+            $price     = get_post_meta( $post_id, '_eo_price', true );
+            $price     = $price !== '' ? (float) $price : null;
+            $price_str = $price !== null ? '$' . number_format( $price, 2 ) : '---';
+            $line_str  = $price !== null ? '$' . number_format( $price * $qty, 2 ) : '---';
+            if ( $price !== null ) $confirm_total += $price * $qty;
+            $price_cells = "<td data-label='Price' style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;'>{$price_str}</td>
+            <td data-label='Total' style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;font-weight:600;text-align:right;'>{$line_str}</td>";
+        }
+
         $confirm_rows .= "<tr style='background:{$bg};'>
             <td data-label='Product' style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;'>{$name}</td>
             <td data-label='SKU' style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#888;'>{$sku}</td>
             <td data-label='Type' style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;'>{$strain}</td>
             <td data-label='Qty' style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;text-align:center;'>{$qty}</td>
+            {$price_cells}
         </tr>";
     }
 
-    $confirm_notes = $sender_notes
+    $confirm_total_block = ( $confirmation_pricing && $confirm_total > 0 )
+        ? "<p style='margin:16px 0 0;text-align:right;font-size:15px;'><strong>Estimated Total: \$" . number_format( $confirm_total, 2 ) . "</strong></p>"
+        : '';
+
+    $confirm_price_headers = $confirmation_pricing
+        ? "<th style='padding:8px 12px;text-align:left;font-size:12px;color:#777;border-bottom:1px solid #ddd;text-transform:uppercase;letter-spacing:.5px;background:#f5f5f5;'>Price</th>
+           <th style='padding:8px 12px;text-align:right;font-size:12px;color:#777;border-bottom:1px solid #ddd;text-transform:uppercase;letter-spacing:.5px;background:#f5f5f5;'>Total</th>"
+        : '';
         ? "<p style='margin:20px 0 0;padding:12px 14px;background:#f5f5f5;border-left:3px solid #999;font-size:14px;'><strong>Notes:</strong> " . nl2br( esc_html( $sender_notes ) ) . "</p>"
         : '';
 
@@ -844,12 +880,13 @@ function eo_handle_submission() {
     <table class='item-table'>
       <thead>
         <tr>
-          <th>Product</th><th>SKU</th><th>Type</th><th style='text-align:center;'>Qty</th>
+          <th>Product</th><th>SKU</th><th>Type</th><th style='text-align:center;'>Qty</th>{$confirm_price_headers}
         </tr>
       </thead>
       <tbody>{$confirm_rows}</tbody>
     </table>
     {$confirm_notes}
+    {$confirm_total_block}
   </div>
   <div class='email-footer'>
     <p style='margin:0;font-size:11px;color:#bbb;'>Sent via {$site_name}</p>
