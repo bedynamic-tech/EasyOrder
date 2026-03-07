@@ -5,11 +5,13 @@ A lightweight WordPress plugin for displaying a product catalog and receiving em
 Built by [Dynamic Technologies](https://bedynamic.tech) with the help of Claude.
 
 ---
+<img width="750" alt="image" src="https://github.com/user-attachments/assets/c3b8497e-b1cd-4c89-8444-7d5816b85d01" />
 
 ## Features
 
 - Automatic 'out of stock' display
 - Custom product post type with SKU, price, stock, type, and category fields
+- 'Submit' button follows website theme
 - Filterable, sortable product table via a simple shortcode
 - Email notification sent to configurable recipients on submission
 - Optional confirmation email sent to the user
