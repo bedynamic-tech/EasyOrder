@@ -1,8 +1,8 @@
 # EasyOrder
 
-A lightweight WordPress plugin for displaying a product catalog and receiving email order requests from logged-in users.
+A lightweight WordPress plugin for displaying a product catalog and receiving email order requests.
 
-Built by [Dynamic Technologies](https://bedynamic.tech)
+Built by [Dynamic Technologies](https://bedynamic.tech) with the help of Claude.
 
 ---
 
@@ -10,7 +10,6 @@ Built by [Dynamic Technologies](https://bedynamic.tech)
 
 - Custom product post type with SKU, price, stock, type, and category fields
 - Filterable, sortable product table via a simple shortcode
-- Order submission by logged-in users with quantity inputs
 - Email notification sent to configurable recipients on submission
 - Optional confirmation email sent to the user
 - Two-click submit confirmation to prevent accidental orders
@@ -31,7 +30,7 @@ Built by [Dynamic Technologies](https://bedynamic.tech)
 ## Installation
 
 1. Download or clone this repository
-2. Place the `easyorder` folder in `/wp-content/plugins/`
+2. Install the plugin via the easyorder.zip file
 3. Activate the plugin from **Plugins** in the WordPress admin
 4. Configure recipients and email options under **Settings → EasyOrder**
 
