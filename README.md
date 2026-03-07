@@ -107,6 +107,9 @@ Sent to the logged-in user who submitted the order. Includes product name, SKU, 
 
 ## Changelog
 
+### 0.2.7
+- Updated login to primary login form eith redirect back to page with shortcut. 
+
 ### 0.2.6
 - Added login form for logged out user access
 
