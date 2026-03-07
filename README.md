@@ -8,6 +8,7 @@ Built by [Dynamic Technologies](https://bedynamic.tech) with the help of Claude.
 
 ## Features
 
+- Automatic 'out of stock' display
 - Custom product post type with SKU, price, stock, type, and category fields
 - Filterable, sortable product table via a simple shortcode
 - Email notification sent to configurable recipients on submission
@@ -59,7 +60,7 @@ Each product supports:
 | Title | Product name |
 | SKU | Optional stock keeping unit identifier |
 | Price | Optional price (displayed in the form and order email) |
-| Stock | Available quantity — users cannot order more than this amount |
+| Stock | Available quantity |
 | Type | Optional single taxonomy term (managed under Products → Types) |
 | Category | Optional single taxonomy term (managed under Products → Categories) |
 
