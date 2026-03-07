@@ -72,7 +72,7 @@ Each product supports:
 
 Navigate to **Settings → EasyOrder** to configure:
 
-- **Order Email Recipients** — Comma-separated list of email addresses to receive order notifications. Leave blank to use the site admin email.
+- **Order Email Recipients** — Optional, comma-separated list of email addresses to receive order notifications.
 - **Confirmation Email** — Toggle whether a confirmation email is sent to the user after submission.
 
 ---
@@ -90,10 +90,10 @@ The product table automatically hides columns with no data:
 ## Emails
 
 ### Order Notification
-Sent to the configured recipients. Includes product name, SKU, type, price, quantity, line totals, estimated order total, and any notes left by the user.
+Includes product name, SKU, type, price, quantity, line totals, estimated order total, and any notes left by the user.
 
 ### Confirmation Email
-Sent to the logged-in user who submitted the order. Includes product name, SKU, type, and quantity — no pricing is included. Can be disabled in settings.
+Sent to the logged-in user who submitted the order. Includes product name, SKU, type, and quantity — no pricing is included.
 
 ---
 
