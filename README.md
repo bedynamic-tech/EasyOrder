@@ -105,41 +105,6 @@ Sent to the logged-in user who submitted the order. Includes product name, SKU, 
 
 ---
 
-## Changelog
-
-### 0.2.7
-- Updated login to primary login form eith redirect back to page with shortcut. 
-
-### 0.2.6
-- Added login form for logged out user access
-
-### 0.2.5
-- Type and Category fields in the product editor changed to dropdowns
-
-### 0.2.4
-- SKU, Type, and Category columns now auto-hide when no data is present
-- Sort icons enlarged for better readability
-- Column visibility notice added to settings page
-
-### 0.2.3
-- Added fallback to ensure recipient list is never empty
-
-### 0.2.2
-- Reverted admin email to horizontal table layout
-
-### 0.2.1
-- Admin email redesigned with stacked card layout per item
-
-### 0.2.0
-- Recipient email addresses moved to Settings → EasyOrder
-- Confirmation email toggle added to settings
-- Plugin file renamed to `easyorder.php`
-
-### 0.1.0
-- Initial release
-
----
-
 ## License
 
 [GPLv2 or later](https://www.gnu.org/licenses/gpl-2.0.html)
