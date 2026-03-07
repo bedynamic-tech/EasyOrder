@@ -2,7 +2,7 @@
 /**
  * Plugin Name: EasyOrder
  * Description: Easily display products, manage inventory and receive email orders.
- * Version:     0.3.1
+ * Version:     0.3.3
  * Author:      Dynamic Technologies
  * Author URI:  https://bedynamic.tech
  */
@@ -837,6 +837,8 @@ function eo_handle_submission() {
         ? "<th style='padding:8px 12px;text-align:left;font-size:12px;color:#777;border-bottom:1px solid #ddd;text-transform:uppercase;letter-spacing:.5px;background:#f5f5f5;'>Price</th>
            <th style='padding:8px 12px;text-align:right;font-size:12px;color:#777;border-bottom:1px solid #ddd;text-transform:uppercase;letter-spacing:.5px;background:#f5f5f5;'>Total</th>"
         : '';
+
+    $confirm_notes = $sender_notes
         ? "<p style='margin:20px 0 0;padding:12px 14px;background:#f5f5f5;border-left:3px solid #999;font-size:14px;'><strong>Notes:</strong> " . nl2br( esc_html( $sender_notes ) ) . "</p>"
         : '';
 
