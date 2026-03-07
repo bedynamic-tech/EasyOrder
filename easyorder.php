@@ -459,9 +459,9 @@ function eo_render_shortcode() {
         .eo-sort-icon { font-size: 20px; opacity: 0.5; margin-left: 6px; }
         .eo-sortable.asc  .eo-sort-icon,
         .eo-sortable.desc .eo-sort-icon { opacity: 1; }
-        .eo-sortable.asc  .eo-sort-icon::before { content: '&#8593;'; }
-        .eo-sortable.desc .eo-sort-icon::before { content: '&#8595;'; }
-        .eo-sortable:not(.asc):not(.desc) .eo-sort-icon::before { content: '&#8597;'; }
+        .eo-sortable.asc  .eo-sort-icon::before { content: '\2191'; }
+        .eo-sortable.desc .eo-sort-icon::before { content: '\2193'; }
+        .eo-sortable:not(.asc):not(.desc) .eo-sort-icon::before { content: '\2195'; }
 
         /* Notes + actions */
         .eo-fields { margin-bottom: 20px; }
