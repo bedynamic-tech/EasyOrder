@@ -20,7 +20,7 @@ define( 'EO_NONCE',  'eo_submit_nonce' );
 
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'eo_action_links' );
 function eo_action_links( $links ) {
-    $settings_link = '<a href="' . admin_url( 'options-general.php?page=easyorder-settings' ) . '">Settings</a>';
+    $settings_link = '<a href="' . esc_url( admin_url( 'options-general.php?page=easyorder-settings' ) ) . '">Settings</a>';
     array_unshift( $links, $settings_link );
     return $links;
 }
@@ -644,6 +644,57 @@ function eo_render_shortcode() {
     return ob_get_clean();
 }
 
+// --- Email Helper ---
+
+/**
+ * Build the HTML <tr> rows for an order email.
+ *
+ * @param array $items       Validated items array, each with 'id' and 'qty'.
+ * @param bool  $show_price  Whether to include price / line-total columns.
+ * @return array { rows: string, total: float }
+ */
+function eo_build_order_rows( array $items, bool $show_price ): array {
+    $rows  = '';
+    $total = 0.0;
+    $i     = 0;
+
+    foreach ( $items as $item ) {
+        $post_id = (int) ( $item['id'] ?? 0 );
+        $qty     = (int) ( $item['qty'] ?? 0 );
+        $post    = $post_id ? get_post( $post_id ) : null;
+
+        if ( ! $post || $post->post_status !== 'publish' || $post->post_type !== EO_CPT ) continue;
+
+        $name       = esc_html( $post->post_title );
+        $sku        = esc_html( get_post_meta( $post_id, '_eo_sku', true ) ?: '---' );
+        $type_terms = get_the_terms( $post_id, EO_STRAIN );
+        $strain     = esc_html( ( $type_terms && ! is_wp_error( $type_terms ) ) ? $type_terms[0]->name : '---' );
+        $bg         = $i++ % 2 === 0 ? '#ffffff' : '#f9f9f9';
+
+        $price_cells = '';
+        if ( $show_price ) {
+            $price_raw  = get_post_meta( $post_id, '_eo_price', true );
+            $price      = $price_raw !== '' ? (float) $price_raw : null;
+            $price_str  = $price !== null ? '$' . number_format( $price, 2 ) : '---';
+            $line_str   = $price !== null ? '$' . number_format( $price * $qty, 2 ) : '---';
+            if ( $price !== null ) $total += $price * $qty;
+            $price_cells = "
+            <td style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;'>{$price_str}</td>
+            <td style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;font-weight:600;text-align:right;'>{$line_str}</td>";
+        }
+
+        $rows .= "<tr style='background:{$bg};'>
+            <td style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;'>{$name}</td>
+            <td style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#888;'>{$sku}</td>
+            <td style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;'>{$strain}</td>
+            <td style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;text-align:center;'>{$qty}</td>
+            {$price_cells}
+        </tr>";
+    }
+
+    return [ 'rows' => $rows, 'total' => $total ];
+}
+
 // --- AJAX Handler ---
 
 add_action( 'wp_ajax_eo_submit', 'eo_handle_submission' );
@@ -672,15 +723,26 @@ function eo_handle_submission() {
     $send_confirmation       = (bool) get_option( 'easyorder_send_confirmation', 1 );
     $confirmation_pricing    = (bool) get_option( 'easyorder_confirmation_pricing', 0 );
 
-    if ( empty( $items ) ) {
+    if ( empty( $items ) || ! is_array( $items ) ) {
         wp_send_json_error( 'No items selected.' );
     }
 
+    if ( count( $items ) > 200 ) {
+        wp_send_json_error( 'Too many items in request.' );
+    }
+
     foreach ( $items as $item ) {
-        $post_id = (int) ( $item['id'] ?? 0 );
+        $post_id  = (int) ( $item['id']  ?? 0 );
+        $item_qty = (int) ( $item['qty'] ?? 0 );
+
         if ( ! $post_id ) continue;
+
+        if ( $item_qty <= 0 ) {
+            wp_send_json_error( 'Invalid quantity submitted.' );
+        }
+
         $stock = (int) get_post_meta( $post_id, '_eo_stock', true );
-        if ( (int) $item['qty'] > $stock ) {
+        if ( $item_qty > $stock ) {
             $name = get_the_title( $post_id ) ?: "Product #{$post_id}";
             wp_send_json_error( "Requested quantity for \"{$name}\" exceeds available stock." );
         }
@@ -689,37 +751,21 @@ function eo_handle_submission() {
     $site_name = get_bloginfo( 'name' );
     $subject   = "New Order Request - {$sender_name}";
 
-    $rows  = '';
-    $total = 0;
-    $i     = 0;
+    // Pre-escape user data for safe use in HTML contexts.
+    $sender_name_html  = esc_html( $sender_name );
+    $sender_email_html = esc_html( sanitize_email( $sender_email ) );
+    $sender_email_attr = esc_attr( sanitize_email( $sender_email ) );
+    $sender_email_hdr  = sanitize_email( $sender_email );
+    $site_name_html    = esc_html( $site_name );
 
-    foreach ( $items as $item ) {
-        $post_id    = (int) ( $item['id'] ?? 0 );
-        $post       = $post_id ? get_post( $post_id ) : null;
-        $qty        = (int) ( $item['qty'] ?? 0 );
+    // --- Admin email ---
 
-        if ( ! $post || $post->post_status !== 'publish' || $post->post_type !== EO_CPT ) continue;
+    $admin_result = eo_build_order_rows( $items, true );
+    $rows         = $admin_result['rows'];
+    $total        = $admin_result['total'];
 
-        $name       = esc_html( $post->post_title );
-        $sku        = esc_html( get_post_meta( $post_id, '_eo_sku',   true ) ?: '---' );
-        $price      = get_post_meta( $post_id, '_eo_price', true );
-        $price      = $price !== '' ? (float) $price : null;
-        $type_terms = get_the_terms( $post_id, EO_STRAIN );
-        $strain     = esc_html( ( $type_terms && ! is_wp_error( $type_terms ) ) ? $type_terms[0]->name : '---' );
-        $price_str  = $price !== null ? '$' . number_format( $price, 2 ) : '---';
-        $line_total = $price !== null ? '$' . number_format( $price * $qty, 2 ) : '---';
-        $bg         = $i++ % 2 === 0 ? '#ffffff' : '#f9f9f9';
-
-        if ( $price !== null ) $total += $price * $qty;
-
-        $rows .= "<tr style='background:{$bg};'>
-            <td style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;'>{$name}</td>
-            <td style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#888;'>{$sku}</td>
-            <td style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;'>{$strain}</td>
-            <td style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;'>{$price_str}</td>
-            <td style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;text-align:center;'>{$qty}</td>
-            <td style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;font-weight:600;text-align:right;'>{$line_total}</td>
-        </tr>";
+    if ( empty( $rows ) ) {
+        wp_send_json_error( 'No valid published products found in the order.' );
     }
 
     $total_block = $total > 0
@@ -754,12 +800,12 @@ function eo_handle_submission() {
 <div class='email-outer'>
 <div class='email-wrap'>
   <div class='email-header'>
-    <p style='margin:0;font-size:13px;color:#999;'>{$site_name}</p>
+    <p style='margin:0;font-size:13px;color:#999;'>{$site_name_html}</p>
     <h1 style='margin:4px 0 0;font-size:18px;color:#222;'>Order Request</h1>
   </div>
   <div class='email-from'>
-    From <strong>{$sender_name}</strong> &nbsp;&middot;&nbsp;
-    <a href='mailto:{$sender_email}' style='color:#0073aa;text-decoration:none;'>{$sender_email}</a>
+    From <strong>{$sender_name_html}</strong> &nbsp;&middot;&nbsp;
+    <a href='mailto:{$sender_email_attr}' style='color:#0073aa;text-decoration:none;'>{$sender_email_html}</a>
   </div>
   <div class='email-body'>
     <table class='item-table'>
@@ -768,8 +814,8 @@ function eo_handle_submission() {
           <th>Product</th>
           <th>SKU</th>
           <th>Type</th>
-          <th>Price</th>
           <th class='center'>Qty</th>
+          <th>Price</th>
           <th class='right'>Total</th>
         </tr>
       </thead>
@@ -779,7 +825,7 @@ function eo_handle_submission() {
     {$notes_block}
   </div>
   <div class='email-footer'>
-    <p style='margin:0;font-size:11px;color:#bbb;'>Sent via {$site_name}</p>
+    <p style='margin:0;font-size:11px;color:#bbb;'>Sent via {$site_name_html}</p>
   </div>
 </div>
 </div>
@@ -788,7 +834,7 @@ function eo_handle_submission() {
 
     $headers = [
         'Content-Type: text/html; charset=UTF-8',
-        "Reply-To: {$sender_email}",
+        'Reply-To: ' . $sender_email_hdr,
     ];
 
     $admin_sent = wp_mail( $recipient, $subject, $body, $headers );
@@ -799,42 +845,9 @@ function eo_handle_submission() {
 
     // --- Confirmation email ---
 
-    $confirm_rows  = '';
-    $confirm_total = 0;
-    $j             = 0;
-
-    foreach ( $items as $item ) {
-        $post_id = (int) ( $item['id'] ?? 0 );
-        $post    = $post_id ? get_post( $post_id ) : null;
-        $qty     = (int) ( $item['qty'] ?? 0 );
-
-        if ( ! $post || $post->post_status !== 'publish' || $post->post_type !== EO_CPT ) continue;
-
-        $name       = esc_html( $post->post_title );
-        $sku        = esc_html( get_post_meta( $post_id, '_eo_sku', true ) ?: '---' );
-        $type_terms = get_the_terms( $post_id, EO_STRAIN );
-        $strain     = esc_html( ( $type_terms && ! is_wp_error( $type_terms ) ) ? $type_terms[0]->name : '---' );
-        $bg         = $j++ % 2 === 0 ? '#ffffff' : '#f9f9f9';
-
-        $price_cells = '';
-        if ( $confirmation_pricing ) {
-            $price     = get_post_meta( $post_id, '_eo_price', true );
-            $price     = $price !== '' ? (float) $price : null;
-            $price_str = $price !== null ? '$' . number_format( $price, 2 ) : '---';
-            $line_str  = $price !== null ? '$' . number_format( $price * $qty, 2 ) : '---';
-            if ( $price !== null ) $confirm_total += $price * $qty;
-            $price_cells = "<td data-label='Price' style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;'>{$price_str}</td>
-            <td data-label='Total' style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;font-weight:600;text-align:right;'>{$line_str}</td>";
-        }
-
-        $confirm_rows .= "<tr style='background:{$bg};'>
-            <td data-label='Product' style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;'>{$name}</td>
-            <td data-label='SKU' style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;color:#888;'>{$sku}</td>
-            <td data-label='Type' style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;'>{$strain}</td>
-            <td data-label='Qty' style='padding:10px 12px;border-bottom:1px solid #eee;font-size:14px;text-align:center;'>{$qty}</td>
-            {$price_cells}
-        </tr>";
-    }
+    $confirm_result = eo_build_order_rows( $items, $confirmation_pricing );
+    $confirm_rows   = $confirm_result['rows'];
+    $confirm_total  = $confirm_result['total'];
 
     $confirm_total_block = ( $confirmation_pricing && $confirm_total > 0 )
         ? "<p style='margin:16px 0 0;text-align:right;font-size:15px;'><strong>Estimated Total: \$" . number_format( $confirm_total, 2 ) . "</strong></p>"
@@ -879,11 +892,11 @@ function eo_handle_submission() {
 <div class='email-outer'>
 <div class='email-wrap'>
   <div class='email-header'>
-    <p style='margin:0;font-size:13px;color:#999;'>{$site_name}</p>
+    <p style='margin:0;font-size:13px;color:#999;'>{$site_name_html}</p>
     <h1 style='margin:4px 0 0;font-size:18px;color:#222;'>Order Request Received</h1>
   </div>
   <div class='email-from'>
-    Hi <strong>{$sender_name}</strong>, your order request has been received and is being reviewed.
+    Hi <strong>{$sender_name_html}</strong>, your order request has been received and is being reviewed.
   </div>
   <div class='email-body'>
     <table class='item-table'>
@@ -898,7 +911,7 @@ function eo_handle_submission() {
     {$confirm_total_block}
   </div>
   <div class='email-footer'>
-    <p style='margin:0;font-size:11px;color:#bbb;'>Sent via {$site_name}</p>
+    <p style='margin:0;font-size:11px;color:#bbb;'>Sent via {$site_name_html}</p>
   </div>
 </div>
 </div>
@@ -908,7 +921,10 @@ function eo_handle_submission() {
     $confirm_headers = [ 'Content-Type: text/html; charset=UTF-8' ];
 
     if ( $send_confirmation ) {
-        wp_mail( $sender_email, "Your Order has been Received", $confirm_body, $confirm_headers );
+        $confirm_sent = wp_mail( $sender_email_hdr, 'Your Order has been Received', $confirm_body, $confirm_headers );
+        if ( ! $confirm_sent ) {
+            error_log( 'EasyOrder: confirmation email failed to send to ' . $sender_email_hdr );
+        }
     }
 
     wp_send_json_success();
