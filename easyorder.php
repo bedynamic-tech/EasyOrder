@@ -2,7 +2,7 @@
 /**
  * Plugin Name: EasyOrder
  * Description: Easily display products, manage inventory and receive email orders.
- * Version:     0.3.5
+ * Version:     1.0.0
  * Author:      Dynamic Technologies
  * Author URI:  https://bedynamic.tech
  */
