@@ -26,7 +26,7 @@ Built with the help of Claude.
 
 - WordPress 6.0+
 - PHP 7.4+
-- A working outbound mail configuration (SMTP plugin recommended)
+- A working outbound mail configuration (SMTP plugin or relay recommended)
 
 ---
 
