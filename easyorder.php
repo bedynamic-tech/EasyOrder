@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       EasyOrder
- * Plugin URI:        https://bedynamic.tech
+ * Plugin URI:        https://bedynamic.tech/easyorder
  * Description:       Easily display products, manage inventory and receive email orders.
  * Version:           1.1.0
  * Requires at least: 6.0
